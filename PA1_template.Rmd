@@ -8,11 +8,41 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r}
+unzip(zipfile = "activity.zip")
+Data <- read.csv("activity.csv", header = T, )
+library(lubridate)
+Data$date1 <- ymd(Data$date)
+Data$date2 <- wday(Data$date1, label = TRUE)
+
+```
 
 
 ## What is mean total number of steps taken per day?
 
+For this part of the assignment, you can ignore the missing values in the dataset.
 
+1. Calculate the total number of steps taken per day
+
+```{r}
+library(dplyr)
+Data1 <- Data %>% 
+         group_by(date) %>% 
+         summarise(Sum_Steps = sum(steps, na.rm = T))
+Data1
+```
+
+2. If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day
+
+```{r}
+hist(Data1$Sum_Steps, col = "red", xlab = "Sum_Steps", main = "Histogram of the total number of steps taken each day")
+library(ggplot2)
+ggplot(data = Data1, aes(x= Sum_Steps)) +
+  geom_histogram(breaks=seq(0,max(Data1$Sum_Steps)+5000,5000),
+                 fill="lightblue", colour="black")
+```
+
+3. Calculate and report the mean and median of the total number of steps taken per day
 
 ## What is the average daily activity pattern?
 
