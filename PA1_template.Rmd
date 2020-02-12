@@ -8,10 +8,12 @@ output:
 
 ## Loading and preprocessing the data
 
-```{r}
+```{r results='hide', message=FALSE, warning=FALSE}
+lapply(c("lubridate", "dplyr", "ggplot2", "stargazer"), require, character.only = TRUE)
 unzip(zipfile = "activity.zip")
 Data <- read.csv("activity.csv", header = T, )
-library(lubridate)
+#library(lubridate)
+#library(stargazer)
 Data$date1 <- ymd(Data$date)
 Data$date2 <- wday(Data$date1, label = TRUE)
 
@@ -25,30 +27,75 @@ For this part of the assignment, you can ignore the missing values in the datase
 1. Calculate the total number of steps taken per day
 
 ```{r}
-library(dplyr)
+#library(dplyr)
 Data1 <- Data %>% 
-         group_by(date) %>% 
+         group_by(date1) %>% 
          summarise(Sum_Steps = sum(steps, na.rm = T))
 Data1
 ```
 
 2. If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day
 
-```{r}
+```{r }
 hist(Data1$Sum_Steps, col = "red", xlab = "Sum_Steps", main = "Histogram of the total number of steps taken each day")
-library(ggplot2)
+#library(ggplot2)
 ggplot(data = Data1, aes(x= Sum_Steps)) +
   geom_histogram(breaks=seq(0,max(Data1$Sum_Steps)+5000,5000),
-                 fill="lightblue", colour="black")
+                 fill="red", colour="black")+
+  ggtitle("Histogram of the total number of steps taken each day") +
+  theme(plot.title = element_text(face = "bold", size = (15), hjust = 0.5))
 ```
 
 3. Calculate and report the mean and median of the total number of steps taken per day
 
+```{r}
+summary(Data1$Sum_Steps)
+
+```
+
+The mean total number of steps taken per day is `r round(summary(Data1$Sum_Steps)["Mean"], 0)`, while the median total number of steps taken per day is `r options(scipen = 999); round(summary(Data1$Sum_Steps)["Median"], 0)`. 
+
 ## What is the average daily activity pattern?
 
+1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+```{r}
+Data2 <- Data %>% 
+         group_by(interval) %>% 
+         summarise(MeanSteps = mean(steps, na.rm = TRUE))
+plot(x = Data2$interval, y = Data2$MeanSteps, type = "l", lty = 1, xlab = "5 min interval", 
+     ylab = "Average Steps taken across all days", main = "Average Daily Activity Pattern")
+```
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
+Data2_1 <- Data2 %>%  
+           dplyr::arrange(desc(MeanSteps))
+Data2_1[1,]
+```
+
+The 5-minute interval that has the maximum number of steps across all the days in the dataset is interval `r Data2_1[1,1]`.
 
 ## Imputing missing values
+
+Note that there are a number of days/intervals where there are missing
+values (coded as `NA`). The presence of missing days may introduce
+bias into some calculations or summaries of the data.
+
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
+
+```{r}
+summary(Data$steps)
+```
+
+The total number of missing values in the dataset is `r sum(is.na(Data$steps))`.
+
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+4. Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 
 
