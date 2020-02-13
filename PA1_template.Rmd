@@ -70,12 +70,12 @@ plot(x = Data2$interval, y = Data2$MeanSteps, type = "l", lty = 1, xlab = "5 min
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 ```{r}
-Data2_1 <- Data2 %>%  
+Data2 <- Data2 %>%  
            dplyr::arrange(desc(MeanSteps))
-Data2_1[1,]
+Data2[1,]
 ```
 
-The 5-minute interval that has the maximum number of steps across all the days in the dataset is interval `r Data2_1[1,1]`.
+The 5-minute interval that has the maximum number of steps across all the days in the dataset is interval `r Data2[1,1]`.
 
 ## Imputing missing values
 
@@ -93,10 +93,74 @@ The total number of missing values in the dataset is `r sum(is.na(Data$steps))`.
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
+To address this question, I have chosen to follow a two steps process whereby I first create an additional variable called intervalMean, which calculates the mean steps taken in each interval and assigns this mean values to all observations. 
+
+```{r}
+Data <- Data %>% 
+        group_by(interval) %>% 
+        mutate(intervalMean = mean(steps, na.rm = T))
+
+```
+
+Afterwards, I have used an if statment to condtionally replace the value of the Steps variable only for the cases where there is a missing value. 
+
+```{r}
+
+Data$stepsFull <- ifelse(is.na(Data$steps), Data$intervalMean, Data$steps)
+
+```
+
+
 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r}
+Data3 <- Data %>% 
+         select(date, date1, date2, interval, stepsFull)
+```
+
 
 4. Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
+```{r}
+Data4 <- Data3 %>% 
+         group_by(date1) %>% 
+         summarise(Sum_Steps = sum(stepsFull, na.rm = T))
+
+ggplot(data = Data4, aes(x= Sum_Steps)) +
+  geom_histogram(breaks=seq(0,max(Data1$Sum_Steps)+5000,5000),
+                 fill="red", colour="black")+
+  ggtitle("Histogram of the total number of steps taken each day") +
+  theme(plot.title = element_text(face = "bold", size = (15), hjust = 0.5))
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+For this part the `weekdays()` function may be of some help here. Use
+the dataset with the filled-in missing values for this part.
+
+1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+```{r}
+Data3$weekendDummy <- ifelse(weekdays(Data3$date1) == "Saturday" | weekdays(Data3$date1) == "Sunday", "weekend", "weekday" )
+```
+
+
+1. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
+
+![Sample panel plot](instructions_fig/sample_panelplot.png) 
+
+```{r}
+Data6 <- Data3 %>% 
+         group_by(weekendDummy, interval) %>% 
+         summarise(MeanSteps = mean(stepsFull, na.rm = TRUE))
+library(lattice)
+xyplot(MeanSteps ~ interval| weekendDummy, data = Data6, type = "l", layout = c(1,2))
+```
+
+
+**Your plot will look different from the one above** because you will
+be using the activity monitor data. Note that the above plot was made
+using the lattice system but you can make the same version of the plot
+using any plotting system you choose.
+
