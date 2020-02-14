@@ -12,11 +12,7 @@ output:
 lapply(c("lubridate", "dplyr", "ggplot2", "stargazer"), require, character.only = TRUE)
 unzip(zipfile = "activity.zip")
 Data <- read.csv("activity.csv", header = T, )
-#library(lubridate)
-#library(stargazer)
-Data$date1 <- ymd(Data$date)
-Data$date2 <- wday(Data$date1, label = TRUE)
-
+Data$date <- ymd(Data$date)
 ```
 
 
@@ -27,9 +23,8 @@ For this part of the assignment, you can ignore the missing values in the datase
 1. Calculate the total number of steps taken per day
 
 ```{r}
-#library(dplyr)
 Data1 <- Data %>% 
-         group_by(date1) %>% 
+         group_by(date) %>% 
          summarise(Sum_Steps = sum(steps, na.rm = T))
 Data1
 ```
@@ -37,8 +32,6 @@ Data1
 2. If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day
 
 ```{r }
-hist(Data1$Sum_Steps, col = "red", xlab = "Sum_Steps", main = "Histogram of the total number of steps taken each day")
-#library(ggplot2)
 ggplot(data = Data1, aes(x= Sum_Steps)) +
   geom_histogram(breaks=seq(0,max(Data1$Sum_Steps)+5000,5000),
                  fill="red", colour="black")+
@@ -53,7 +46,7 @@ summary(Data1$Sum_Steps)
 
 ```
 
-The mean total number of steps taken per day is `r round(summary(Data1$Sum_Steps)["Mean"], 0)`, while the median total number of steps taken per day is `r options(scipen = 999); round(summary(Data1$Sum_Steps)["Median"], 0)`. 
+<span style="color: red;">The mean total number of steps taken per day is `r round(summary(Data1$Sum_Steps)["Mean"], 0)`, while the median total number of steps taken per day is `r options(scipen = 999); round(summary(Data1$Sum_Steps)["Median"], 0)`.</span>
 
 ## What is the average daily activity pattern?
 
@@ -75,7 +68,7 @@ Data2 <- Data2 %>%
 Data2[1,]
 ```
 
-The 5-minute interval that has the maximum number of steps across all the days in the dataset is interval `r Data2[1,1]`.
+<span style="color: red;">The 5-minute interval that has the maximum number of steps across all the days in the dataset is interval `r Data2[1,1]`.</span>
 
 ## Imputing missing values
 
@@ -89,11 +82,11 @@ bias into some calculations or summaries of the data.
 summary(Data$steps)
 ```
 
-The total number of missing values in the dataset is `r sum(is.na(Data$steps))`.
+<span style="color: red;">The total number of missing values in the dataset is `r sum(is.na(Data$steps))`.</span>
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
-To address this question, I have chosen to follow a two steps process whereby I first create an additional variable called intervalMean, which calculates the mean steps taken in each interval and assigns this mean values to all observations. 
+<span style="color: red;">To address this question, I have chosen to follow a two steps process whereby I first create an additional variable called intervalMean, which calculates the mean steps taken in each interval and assigns this mean values to all observations.</span>
 
 ```{r}
 Data <- Data %>% 
@@ -102,7 +95,7 @@ Data <- Data %>%
 
 ```
 
-Afterwards, I have used an if statment to condtionally replace the value of the Steps variable only for the cases where there is a missing value. 
+<span style="color: red;">Afterwards, I have used an if statment to condtionally create a variable called stepsFull, which takes the steps value if steps is not missing and takes the intervalMean value when the steps varialbe is missing.</span>
 
 ```{r}
 
@@ -115,7 +108,7 @@ Data$stepsFull <- ifelse(is.na(Data$steps), Data$intervalMean, Data$steps)
 
 ```{r}
 Data3 <- Data %>% 
-         select(date, date1, date2, interval, stepsFull)
+         select(date, interval, stepsFull)
 ```
 
 
@@ -123,7 +116,7 @@ Data3 <- Data %>%
 
 ```{r}
 Data4 <- Data3 %>% 
-         group_by(date1) %>% 
+         group_by(date) %>% 
          summarise(Sum_Steps = sum(stepsFull, na.rm = T))
 
 ggplot(data = Data4, aes(x= Sum_Steps)) +
@@ -131,8 +124,12 @@ ggplot(data = Data4, aes(x= Sum_Steps)) +
                  fill="red", colour="black")+
   ggtitle("Histogram of the total number of steps taken each day") +
   theme(plot.title = element_text(face = "bold", size = (15), hjust = 0.5))
+
+summary(Data4$Sum_Steps)
 ```
 
+<span style="color: red;"> With the imputed missing cases the **mean** total steps taken each day is 
+`r round(summary(Data4$Sum_Steps)["Mean"], 0)` while the **median** total steps taken each day is `r round(summary(Data4$Sum_Steps)["Median"], 0)`.</span>
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -142,7 +139,7 @@ the dataset with the filled-in missing values for this part.
 1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
 ```{r}
-Data3$weekendDummy <- ifelse(weekdays(Data3$date1) == "Saturday" | weekdays(Data3$date1) == "Sunday", "weekend", "weekday" )
+Data3$weekendDummy <- ifelse(weekdays(Data3$date) == "Saturday" | weekdays(Data3$date) == "Sunday", "weekend", "weekday" )
 ```
 
 
@@ -157,10 +154,4 @@ Data6 <- Data3 %>%
 library(lattice)
 xyplot(MeanSteps ~ interval| weekendDummy, data = Data6, type = "l", layout = c(1,2))
 ```
-
-
-**Your plot will look different from the one above** because you will
-be using the activity monitor data. Note that the above plot was made
-using the lattice system but you can make the same version of the plot
-using any plotting system you choose.
 
